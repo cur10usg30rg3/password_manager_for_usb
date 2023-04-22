@@ -1,13 +1,14 @@
 import os
 import json
 import bcrypt
+from cryptography.fernet import Fernet
 
 
 # Authentication
 MASTER_PASSWORD = b"password123"
 PASSWORD_HASH = bcrypt.hashpw(MASTER_PASSWORD, bcrypt.gensalt())
 
-
+# Main
 def main():
     # User guess for the password
     password_attempt = input("Please enter the master password: ")
@@ -25,11 +26,29 @@ def main():
             print("USB drive not found.")
             return
 
+        # Encryption
+        key_path = os.path.join(usb_path, "key.txt")
+        if os.path.exists(key_path):
+            with open(key_path, "rb") as key_file:
+                key = key_file.read()
+        else:
+            key = Fernet.generate_key()
+            with open(key_path, "wb") as key_file:
+                key_file.write(key)
+
+        fernet = Fernet(key)
+
         # Check if the password file exists on the USB drive
-        password_file_path = os.path.join(usb_path, "passwords.json")
+        password_file_path = os.path.join(usb_path, "passwords.bin")
         if os.path.exists(password_file_path):
-            with open(password_file_path, "r") as password_file:
-                password_data = json.load(password_file)
+            with open(password_file_path, "rb") as password_file:
+                password_data_encrypted = password_file.read()
+                try:
+                    password_data_decrypted = fernet.decrypt(password_data_encrypted)
+                    password_data = json.loads(password_data_decrypted)
+                except Exception as e:
+                    print("Error decrypting password file:", str(e))
+                    return
         else:
             password_data = {}
 
@@ -37,7 +56,8 @@ def main():
         while True:
             print("1. View all passwords")
             print("2. Add a new password")
-            print("3. Quit")
+            print("3. Edit an existing password")
+            print("4. Quit")
 
             choice = input("Please enter your choice: ")
 
@@ -45,9 +65,12 @@ def main():
                 view_passwords(password_data)
             elif choice == "2":
                 add_password(password_data)
-                save_passwords(password_data, password_file_path)
+                save_passwords(password_data, password_file_path, fernet)
             elif choice == "3":
-                save_passwords(password_data, password_file_path)
+                edit_password(password_data)
+                save_passwords(password_data, password_file_path, fernet)
+            elif choice == "4":
+                save_passwords(password_data, password_file_path, fernet)
                 break
             else:
                 print("Invalid choice.")
@@ -79,13 +102,41 @@ def add_password(password_data):
     print("Password added successfully.")
 
 
-def save_passwords(password_data, password_file_path):
+def edit_password(password_data):
+    # Check if there are any saved passwords
+    if not password_data:
+        print("No saved passwords.")
+        return
+
+    # Print out the saved passwords
+    for key, value in password_data.items():
+        print(key + ": " + value)
+
+    # Ask for the website to edit
+    website_to_edit = input("Please enter the website to edit: ")
+
+    # Check if the website exists in the password data
+    if website_to_edit not in password_data:
+        print("Website not found.")
+        return
+
+    # Ask for the new password
+    new_password = input("Please enter the new password: ")
+
+    # Update the password for the website
+    password_data[website_to_edit] = new_password
+
+    print("Password updated successfully.")
+
+def save_passwords(password_data, password_file_path, fernet):
+    # Encrypt the password data
+    password_data_encrypted = fernet.encrypt(json.dumps(password_data).encode())
+
     # Save the password data to the file
-    with open(password_file_path, "w") as password_file:
-        json.dump(password_data, password_file)
+    with open(password_file_path, "wb") as password_file:
+        password_file.write(password_data_encrypted)
 
     print("Passwords saved successfully.")
-
 
 if __name__ == "__main__":
     main()
