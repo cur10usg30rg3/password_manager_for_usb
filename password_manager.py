@@ -57,7 +57,8 @@ def main():
             print("1. View all passwords")
             print("2. Add a new password")
             print("3. Edit an existing password")
-            print("4. Quit")
+            print("4. Delete an existing password")
+            print("5. Exit")
 
             choice = input("Please enter your choice: ")
 
@@ -70,6 +71,9 @@ def main():
                 edit_password(password_data)
                 save_passwords(password_data, password_file_path, fernet)
             elif choice == "4":
+                delete_passwords(password_data)
+                save_passwords(password_data, password_file_path, fernet)
+            elif choice =="5":
                 save_passwords(password_data, password_file_path, fernet)
                 break
             else:
@@ -127,6 +131,30 @@ def edit_password(password_data):
     password_data[website_to_edit] = new_password
 
     print("Password updated successfully.")
+
+
+def delete_passwords(password_data):
+    # Check if there are any saved passwords
+    if not password_data:
+        print("No saved passwords.")
+        return
+
+    # Print out the current saved passwords for reference
+    view_passwords(password_data)
+
+    # Ask for the website to delete
+    website_to_delete = input("Please enter the website to delete: ")
+
+    # Check if the website exists in the password data
+    if website_to_delete in password_data:
+        # Delete the password for the website
+        del password_data[website_to_delete]
+
+        print("Website", website_to_delete, "and password deleted successfully.")
+    else:
+        print("Website not found in saved passwords.")
+
+
 
 def save_passwords(password_data, password_file_path, fernet):
     # Encrypt the password data
