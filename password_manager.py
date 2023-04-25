@@ -54,6 +54,8 @@ def main():
 
         # Main menu
         while True:
+            print("_" * 60)
+            print(" ")
             print("1. View all passwords")
             print("2. Add a new password")
             print("3. Edit an existing password")
@@ -87,16 +89,19 @@ def main():
 def view_passwords(password_data):
     # Check if there are any saved passwords
     if not password_data:
+        print("_" * 60)
+        print(" ")
         print("No saved passwords.")
         return
 
     # Print out the saved passwords
     for key, value in password_data.items():
+        print("_" * 60)
         print(key + ": " + value)
-
 
 def add_password(password_data):
     # Ask for the new password and website
+    print(" ")
     new_website = input("Please enter the website: ")
     new_password = input("Please enter the password: ")
 
@@ -114,9 +119,11 @@ def edit_password(password_data):
 
     # Print out the saved passwords
     for key, value in password_data.items():
+        print("_" * 60)
         print(key + ": " + value)
-
     # Ask for the website to edit
+    print("_" * 60)
+    print(" ")
     website_to_edit = input("Please enter the website to edit: ")
 
     # Check if the website exists in the password data
@@ -143,15 +150,18 @@ def delete_passwords(password_data):
     view_passwords(password_data)
 
     # Ask for the website to delete
+    print("_" * 60)
+    print(" ")
     website_to_delete = input("Please enter the website to delete: ")
 
     # Check if the website exists in the password data
     if website_to_delete in password_data:
         # Delete the password for the website
         del password_data[website_to_delete]
-
+        print(" ")
         print("Website", website_to_delete, "and password deleted successfully.")
     else:
+        print(" ")
         print("Website not found in saved passwords.")
 
 
@@ -164,6 +174,7 @@ def save_passwords(password_data, password_file_path, fernet):
     with open(password_file_path, "wb") as password_file:
         password_file.write(password_data_encrypted)
 
+    print(" ")
     print("Passwords saved successfully.")
 
 if __name__ == "__main__":
